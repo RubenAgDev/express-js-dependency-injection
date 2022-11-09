@@ -1,0 +1,32 @@
+import { MongoClient, ObjectId } from 'mongodb';
+
+import Database from './Database';
+
+class MongoDBDataAccess implements Database {
+  client: MongoClient | undefined;
+
+  constructor() {}
+
+  newId(value: any): ObjectId {
+    return new ObjectId(value);
+  }
+
+  async connect(connectionString: string, appName: string) {
+    this.client = new MongoClient(connectionString, {
+      appName
+    });
+    await this.client.connect();
+    await this.client.db("admin").command({ ping: 1 });
+  }
+
+  async close() {
+    await this.client?.close();
+  }
+
+  async query(collection: string, filter: {}) {
+    const findResult = await this.client?.db().collection(collection).find(filter);
+    return findResult?.toArray();
+  }
+}
+
+export default MongoDBDataAccess;
